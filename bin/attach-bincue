@@ -12,10 +12,16 @@ Getopt::Long::Configure ("bundling", "no_ignore_case");
 
 my $device = undef;
 my $image = undef;
+my $offset = undef;
+my $size = undef;
+my $verbose = 0;
 
 GetOptions (
       "device|d=s" => \$device,
       "image|i=s" => \$image,
+      "offset|o=i" => \$offset,
+      "size|s=i" => \$size,
+      "verbose|v" => \$verbose,
       "help|h|?" => sub {
          require Pod::Usage;
          Pod::Usage::pod2usage(-exitstatus => 0, verbose => 2);
@@ -37,6 +43,22 @@ if (defined $image) {
    # now attach the file
    open IMAGE, "<", $image
       or die "$image: $!";
+
+   unless (defined $offset and defined $size) {
+      require v5.8;
+
+      # guess
+      sysread IMAGE, my $buf, 2352*100;
+      # find two volume descriptors... there _should_ be two ;)
+      # ISO has <type>CD001, we ignore high sierra
+      $buf =~ /\001CD001/g or die "unable to guess: no volume descriptor found";
+      my $ofs1 = $-[0];
+      $buf =~ /[\001\002\377]CD001/g or die "unable to guess: no second volume descriptor found";
+      my $ofs2 = $-[0];
+      $size = $ofs2 - $ofs1;
+      $offset = $ofs1 % $size;
+      printf "\nGuessed blocksize %d and offset 0x%04x\n", $size, $offset;
+   }
 
    my ($a, $b) = Linux::NBD::tcp_socketpair;
 
@@ -81,12 +103,12 @@ sub Server::req_read {
 
    my ($ofs_l, $ofs_h) = ($ofs & 2047, $ofs >> 11);
 
-   printf "READ %08x \@%08x (block $ofs_h+$ofs_l)\n", $len, $ofs;
+   printf "READ %08x \@%08x (block $ofs_h+$ofs_l)\n", $len, $ofs if $verbose > 0;
 
    $self->reply($handle);
 
    while ($len) {
-      sysseek IMAGE, ($ofs_h * 2352) + $ofs_l + 0x18, 0
+      sysseek IMAGE, ($ofs_h * $size) + $ofs_l + $offset, 0
          or die "$image: $!";
 
       $ofs_l = 2048 - $ofs_l;
@@ -136,12 +158,32 @@ request, usually causing it to exit cleanly.
 Attached the given file to the network block device and serve requests. The command will only
 exit on disconnect or any fatal errors.
 
+=item --offset bytes
+
+The ISO image is offset by the given number of bytes. The default is to guess. Common values are C<24>, C<8> and C<0>.
+
+=item --size blocksize
+
+The blocksize in bytes. The default is to guess. Common values are C<2352>, C<2332> and C<2340>.
+
 =item --device /dev/ndx
 
 The nbd device node to use. C<attach-bincue> automatically looks for a
 unused one if this switch isn't given.
 
+=item --verbose
+
+Increase verbosity. With this switch, read requests will be logged to stdout.
+
 =back
+
+=head1 EXAMPLES
+
+Common combinations of offset and blocksize
+
+   attach-bincue -b 2352 -o 24
+   attach-bincue -b 2332 -o 8
+   attach-bincue -b 2340 -o 0
 
 =head1 AUTHOR
 

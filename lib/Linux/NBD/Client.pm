@@ -8,7 +8,18 @@ Linux::NBD::Client - client (device) side of a network blokc device
 
 =head1 DESCRIPTION
 
-Ehrm.
+WARNING: I talked to the author of the nbd driver because nbd is so
+extremely racy (right now, stopping it often causes oopses, a server
+crashing also often oopses etc..).
+
+It turned out that he doesn't care at all and nbd is basically
+unmaintained, so YMMV when using this module, especially when writing
+servers.
+
+He really should have said that on his nbd pages ;[.
+
+OTOH, it works relatively reliable when you don't stop the servers, so
+watch out and keep your fingers crossed.
 
 =head1 METHODS
 
@@ -18,7 +29,7 @@ Ehrm.
 
 package Linux::NBD::Client;
 
-$VERSION = 0.1;
+$VERSION = 0.2;
 
 use Linux::NBD ();
 
@@ -209,6 +220,8 @@ sub kill_async {
       #_clear_que fileno $self->{device_fd};
       #_disconnect fileno $self->{device_fd};
       #_clear_sock fileno $self->{device_fd};
+      # just kill -9 it, seems to be safest (all other ways just oops sooner or later)
+      kill 9, $pid;
    }
 }
 

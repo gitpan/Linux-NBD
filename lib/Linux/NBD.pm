@@ -20,7 +20,7 @@ use the source :)
 package Linux::NBD;
 
 BEGIN {
-   $VERSION = 0.1;
+   $VERSION = 0.2;
 
    require XSLoader;
    XSLoader::load Linux::NBD, $VERSION;

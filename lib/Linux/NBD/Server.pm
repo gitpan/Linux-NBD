@@ -20,7 +20,7 @@ implementations just return EIO.
 
 package Linux::NBD::Server;
 
-$VERSION = 0.1;
+$VERSION = 0.2;
 
 use Linux::NBD ();
 

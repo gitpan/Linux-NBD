@@ -1,5 +1,10 @@
 Revision history for Perl extension Linux::NBD
 
+0.2   Tue May 20 20:09:25 CEST 2003
+	- guessing for attach-bincue.
+        - just kill the server => less oopses, but still.
+        - corrected version. doh.
+
 0.01  Thu May  8 22:18:22 CEST 2003
-	- original version; copied form Convert-Scalar
+	- original version; copied from Convert-Scalar
 
