@@ -4,12 +4,16 @@ Linux::NBD - interface to the linux network block device.
 
 =head1 SYNOPSIS
 
+ # Kernel 2.4+ is required
  use Linux::NBD;
 
 =head1 DESCRIPTION
 
 See L<Linux::NBD::Client> and L<Linux::NBD::Server>, or no, better idea:
 use the source :)
+
+NOTICE: Only the Linux 2.4 and newer nbd device is supported by this
+module. For older kernels you are on your own.
 
 =head1 FUNCTIONS
 
@@ -20,7 +24,7 @@ use the source :)
 package Linux::NBD;
 
 BEGIN {
-   $VERSION = 0.2;
+   $VERSION = 0.21;
 
    require XSLoader;
    XSLoader::load Linux::NBD, $VERSION;

@@ -14,6 +14,7 @@ my $device = undef;
 my $image = undef;
 my $offset = undef;
 my $size = undef;
+my $mount = undef;
 my $verbose = 0;
 
 GetOptions (
@@ -22,6 +23,7 @@ GetOptions (
       "offset|o=i" => \$offset,
       "size|s=i" => \$size,
       "verbose|v" => \$verbose,
+      "mount|m=s" => \$mount,
       "help|h|?" => sub {
          require Pod::Usage;
          Pod::Usage::pod2usage(-exitstatus => 0, verbose => 2);
@@ -56,7 +58,7 @@ if (defined $image) {
       $buf =~ /[\001\002\377]CD001/g or die "unable to guess: no second volume descriptor found";
       my $ofs2 = $-[0];
       $size = $ofs2 - $ofs1;
-      $offset = $ofs1 % $size;
+      $offset = $ofs1 - 16 * 2048; # adjust offset so that sector 16 is the first volume header always.
       printf "\nGuessed blocksize %d and offset 0x%04x\n", $size, $offset;
    }
 
@@ -76,20 +78,28 @@ if (defined $image) {
 
    $device = $client->device;
 
-   print <<EOF;
+   if (defined $mount) {
+      print "Running mount (you have to unmount yourself)\n";
+      exec "mount", "-tiso9660", "-oro", $device, $mount
+         if fork == 0;
+      print "Everything set up, starting server\n";
+   } else {
+      print <<EOF;
 
-   Everything seems to be set up now, try something like:
+      Everything seems to be set up now, try something like:
 
-      mount -tiso9660 $device /mnt
+         mount -tiso9660 $device /mnt
 
-   Press ^C to exit...
+      Press ^C to exit...
 EOF
+   }
 
    # now create a server instance and handle
    # the requests.
 
    my $server = Server->new(socket => $b);
    $server->run;
+   # never returns
 }
 
 BEGIN {
@@ -133,8 +143,7 @@ attach-bincue - attach a .bin (cdrom image) containing an iso9660 fs to nbd
 
 =head1 SYNOPSIS
 
-  attach-bincue -i iso9660.bin &	# start server
-  mount -tiso9660 /dev/ndx /mnt
+  attach-bincue -i iso9660.bin -m /mnt &	# start server
 
   # kill server
   umount /mnt
@@ -148,6 +157,10 @@ requests.
 
 Otherwise the nbd device specified with C<-d> is sent a disconnect
 request, usually causing it to exit cleanly.
+
+Despite the name of this program, many more image formats can be attached
+due to the guessing code - I have successfully mounted nero-nrg,
+clonecd-img, blindwrite, uncompressed .fcd and a few more formats.
 
 =head1 ARGUMENTS
 
@@ -174,6 +187,10 @@ unused one if this switch isn't given.
 =item --verbose
 
 Increase verbosity. With this switch, read requests will be logged to stdout.
+
+=item --mount path
+
+Try to mount the CD as iso image on the given path.
 
 =back
 

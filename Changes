@@ -1,5 +1,12 @@
 Revision history for Perl extension Linux::NBD
 
+0.21  Fri Jun  6 09:59:03 CEST 2003
+	- kernel 2.4 is required. say so!
+        - fix a bug with wrong calling conventions for mknod.
+        - new option --mount for attach-bincue.
+        - attach-bincue now moves the offset so that the first volhdr
+          is at sector 16.
+
 0.2   Tue May 20 20:09:25 CEST 2003
 	- guessing for attach-bincue.
         - just kill the server => less oopses, but still.

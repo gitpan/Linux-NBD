@@ -29,7 +29,7 @@ watch out and keep your fingers crossed.
 
 package Linux::NBD::Client;
 
-$VERSION = 0.2;
+$VERSION = 0.21;
 
 use Linux::NBD ();
 
@@ -106,7 +106,7 @@ sub device {
            $_ < 256 or croak "unable to find an available nbd device";
 
            my $path = "/dev/nd$_";
-           -e $path or system qw<mknod $path b 43 $_>;
+           -e $path or system "mknod", $path, "b", 43, $_;
            open my $dev, "+<$path" or croak "$device: $!";
            _set_sock fileno $dev, -1;
            if ($!{EINVAL}) {
