@@ -1,0 +1,149 @@
+#!/usr/bin/perl
+
+# (c)2003 Marc Alexander Lehmann <nbd@plan9.de>
+
+use Getopt::Long;
+
+use Linux::NBD;
+use Linux::NBD::Client;
+use Linux::NBD::Server;
+
+Getopt::Long::Configure ("bundling", "no_ignore_case");
+
+my $device = undef;
+my $image = undef;
+
+GetOptions (
+      "device|d=s" => \$device,
+      "image|i=s" => \$image,
+      "help|h|?" => sub {
+         require Pod::Usage;
+         Pod::Usage::pod2usage(-exitstatus => 0, verbose => 2);
+      },
+) or exit 1;
+
+defined $device || defined $image
+   or die "You must specify one (or both) of the -d or -i switches. Use --help.\n";
+
+# open an nbd device
+my $client = new Linux::NBD::Client device => $device;
+
+# clear it
+$client->clear_queue;
+$client->disconnect;
+$client->socket(undef);
+
+if (defined $image) {
+   # now attach the file
+   open IMAGE, "<", $image
+      or die "$image: $!";
+
+   my ($a, $b) = Linux::NBD::tcp_socketpair;
+
+   # cleanup cleanly. oops ;)
+   $SIG{INT} =
+   $SIG{TERM} =
+   $SIG{QUIT} =
+   $SIG{HUP} = sub { exit };
+
+   # set the socket and fork the client service process
+   $client->set_blocksize(2048);
+   $client->set_size(-s IMAGE);
+   $client->socket($a);
+   $client->run_async;
+
+   $device = $client->device;
+
+   print <<EOF;
+
+   Everything seems to be set up now, try something like:
+
+      mount -tiso9660 $device /mnt
+
+   Press ^C to exit...
+EOF
+
+   # now create a server instance and handle
+   # the requests.
+
+   my $server = Server->new(socket => $b);
+   $server->run;
+}
+
+BEGIN {
+   @Server::ISA = Linux::NBD::Server::;
+};
+
+# implement only read requests (we emulate a primitive cdrom...)
+
+sub Server::req_read {
+   my ($self, $handle, $ofs, $len) = @_;
+
+   my ($ofs_l, $ofs_h) = ($ofs & 2047, $ofs >> 11);
+
+   printf "READ %08x \@%08x (block $ofs_h+$ofs_l)\n", $len, $ofs;
+
+   $self->reply($handle);
+
+   while ($len) {
+      sysseek IMAGE, ($ofs_h * 2352) + $ofs_l + 0x18, 0
+         or die "$image: $!";
+
+      $ofs_l = 2048 - $ofs_l;
+      $ofs_l < $len or $ofs_l = $len;
+
+      sysread IMAGE, my $buf, $ofs_l;
+
+      $ofs_l == length $buf or $buf = "\x0" x $ofs_l;
+
+      $self->send($buf);
+
+      $len -= $ofs_l;
+
+      $ofs_l = 0;
+      $ofs_h++;
+   }
+}
+
+=head1 NAME
+
+attach-bincue - attach a .bin (cdrom image) containing an iso9660 fs to nbd
+
+=head1 SYNOPSIS
+
+  attach-bincue -i iso9660.bin &	# start server
+  mount -tiso9660 /dev/ndx /mnt
+
+  # kill server
+  umount /mnt
+  attach-bincue -d /dev/ndx		# disconnect server
+
+=head1 DESCRIPTION
+
+With the C<-i> switch, attaches a C<.bin> file (containing an iso 9660
+filesystem image in the bin/cue "fileformat") to a nbd instance and serve
+requests.
+
+Otherwise the nbd device specified with C<-d> is sent a disconnect
+request, usually causing it to exit cleanly.
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item --image binfile
+
+Attached the given file to the network block device and serve requests. The command will only
+exit on disconnect or any fatal errors.
+
+=item --device /dev/ndx
+
+The nbd device node to use. C<attach-bincue> automatically looks for a
+unused one if this switch isn't given.
+
+=back
+
+=head1 AUTHOR
+
+Marc Lehmann <nbd@plan9.de>.
+

@@ -1,0 +1,5 @@
+Revision history for Perl extension Linux::NBD
+
+0.01  Thu May  8 22:18:22 CEST 2003
+	- original version; copied form Convert-Scalar
+
