@@ -1,6 +1,12 @@
 Revision history for Perl extension Linux::NBD
 
-0.22 Sat Aug 30 01:30:33 CEST 2003
+0.231 Thu Mar  3 18:00:52 CET 2005
+	- change of contact address.
+
+0.23  Thu Oct 23 18:03:51 CEST 2003
+	- portability fix for various perl configs.
+
+0.22  Sat Aug 30 01:30:33 CEST 2003
 	- fix offset detection in attach-bincue.
 
 0.21  Fri Jun  6 09:59:03 CEST 2003

@@ -77,6 +77,7 @@ MODULE = Linux::NBD		PACKAGE = Linux::NBD::Server
 void
 _one_request (SV *obj, int fd)
 	CODE:
+{
         struct nbd_request req;
 
         if (read (fd, &req, sizeof (req)) == sizeof (req))
@@ -105,10 +106,12 @@ _one_request (SV *obj, int fd)
           }
 
         XSRETURN_YES;
+}
 
 SV *
 _format_reply (SV *handle, unsigned int error = 0, SV *data = 0)
 	CODE:
+{
         struct nbd_reply rep;
         STRLEN len;
         char *h = SvPV (handle, len);
@@ -124,7 +127,7 @@ _format_reply (SV *handle, unsigned int error = 0, SV *data = 0)
 
         if (data && !error)
           sv_catsv (RETVAL, data);
-        
+}        
         OUTPUT:
         RETVAL
 

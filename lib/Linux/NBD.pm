@@ -24,7 +24,7 @@ module. For older kernels you are on your own.
 package Linux::NBD;
 
 BEGIN {
-   $VERSION = 0.22;
+   $VERSION = 0.231;
 
    require XSLoader;
    XSLoader::load Linux::NBD, $VERSION;
@@ -68,8 +68,8 @@ sub tcp_socketpair {
 
 =head1 AUTHOR
 
- Marc Lehmann <pcg@goof.com>
- http://www.goof.com/pcg/marc/
+ Marc Lehmann <schmorp@schmorp.de>
+ http://home.schmorp.de/
 
 =cut
 
