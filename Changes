@@ -1,5 +1,8 @@
 Revision history for Perl extension Linux::NBD
 
+0.22 Sat Aug 30 01:30:33 CEST 2003
+	- fix offset detection in attach-bincue.
+
 0.21  Fri Jun  6 09:59:03 CEST 2003
 	- kernel 2.4 is required. say so!
         - fix a bug with wrong calling conventions for mknod.

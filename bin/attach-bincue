@@ -53,12 +53,12 @@ if (defined $image) {
       sysread IMAGE, my $buf, 2352*100;
       # find two volume descriptors... there _should_ be two ;)
       # ISO has <type>CD001, we ignore high sierra
-      $buf =~ /\001CD001/g or die "unable to guess: no volume descriptor found";
+      $buf =~ /\001CD001\001/g or die "unable to guess: no primary volume descriptor found";
       my $ofs1 = $-[0];
-      $buf =~ /[\001\002\377]CD001/g or die "unable to guess: no second volume descriptor found";
+      $buf =~ /[\000\001\002\377]CD001\001/g or die "unable to guess: no second volume descriptor found";
       my $ofs2 = $-[0];
       $size = $ofs2 - $ofs1;
-      $offset = $ofs1 - 16 * 2048; # adjust offset so that sector 16 is the first volume header always.
+      $offset = $ofs1 - 16 * $size; # adjust offset so that sector 16 is the first volume header always.
       printf "\nGuessed blocksize %d and offset 0x%04x\n", $size, $offset;
    }
 
