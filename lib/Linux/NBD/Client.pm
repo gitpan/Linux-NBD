@@ -1,6 +1,6 @@
 =head1 NAME
 
-Linux::NBD::Client - client (device) side of a network blokc device
+Linux::NBD::Client - client (device) side of a network block device
 
 =head1 SYNOPSIS
 
@@ -239,7 +239,7 @@ sub DESTROY {
 
 =head1 AUTHOR
 
- Marc Lehmann <pcg@goof.com>
+ Marc Lehmann <schmorp@schmorp.de>
  http://home.schmorp.de/
 
 =cut

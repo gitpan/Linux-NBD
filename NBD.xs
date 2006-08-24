@@ -84,6 +84,8 @@ _one_request (SV *obj, int fd)
           {
             if (req.magic == htonl (NBD_REQUEST_MAGIC))
               {
+                req.type = htonl (req.type);
+
                 if (req.type < 2)
                   {
                     u64 from = ntohll (req.from);

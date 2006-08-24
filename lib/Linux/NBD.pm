@@ -24,7 +24,7 @@ module. For older kernels you are on your own.
 package Linux::NBD;
 
 BEGIN {
-   $VERSION = 0.231;
+   $VERSION = 0.9;
 
    require XSLoader;
    XSLoader::load Linux::NBD, $VERSION;

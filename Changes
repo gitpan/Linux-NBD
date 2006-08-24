@@ -1,5 +1,13 @@
 Revision history for Perl extension Linux::NBD
 
+0.9   Thu Aug 24 06:04:33 CEST 2006
+	- minor reformatting/doc fixes.
+	- applied patches by Luciano Miguel Ferre:
+        - request type field (read/write) was not decoded
+          properly, so write requests failed.
+        - the recv method didn't cope with short reads.
+        - documented nbd protocol handshake.
+
 0.231 Thu Mar  3 18:00:52 CET 2005
 	- change of contact address.
 

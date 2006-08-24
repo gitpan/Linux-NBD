@@ -71,7 +71,7 @@ Formats and sends a reply to the server.
 
 Writes the given data to the client socket.
 
-=item $server->recv($bytes)
+=item $server->recv ($bytes)
 
 Reads the specified number of bytes and returns them.
 
@@ -105,21 +105,26 @@ sub send {
 }
 
 sub recv {
-   $_[1] == sysread $_[0]->{socket}, (my $buf), $_[1]
-      or die "error while receiving from network: $!";
+   my ($self, $len) = @_;
 
-   $buf;
+   my ($buf, $todo);
+
+   sysread $self->{socket}, $buf, $togo, length $buf
+         or die "error or eof while receiving from network: $!";
+      while $todo = $len - length $buf;
+
+   $buf
 }
 
-=item $server->req_read($handle, $offset, $length)
+=item $server->req_read ($handle, $offset, $length)
 
 This callback is called for every read request. It should send
-back a reply and the requestes number of bytes, e.g.:
+back a reply and the requested number of bytes, e.g.:
 
   my ($self, $handle, $ofs, $len) = @_;
   $self->reply($handle, 0, "\xff" x $len);
 
-=item $server->req_write($handle, $offset, $length)
+=item $server->req_write ($handle, $offset, $length)
 
 Same as C<req_read>, but you should use C<recv> to read C<$len> bytes from
 the socket (even if you intend to return an error, of course).
@@ -133,23 +138,46 @@ the socket (even if you intend to return an error, of course).
 sub req_read {
    my ($self, $handle, $ofs, $len) = @_;
 
-   $self->reply($handle, 1);
+   $self->reply ($handle, 1);
 }
 
 sub req_write {
    my ($self, $handle, $ofs, $len) = @_;
 
-   $self->recv($len);
-   $self->reply($handle, 1);
+   $self->recv ($len);
+   $self->reply ($handle, 1);
 }
 
 1;
 
 =back
 
+=head1 NBD TOOL NEGOTIATION PROTOCOL
+
+Standard NBD tools add a handshake phase before starting to serve/send
+requests. The server-side implementation looks like this:
+
+    $size = new Math::BigInt $size;
+    my $size_hi = $size->copy->brsft(32)->blsft(32);
+    my $size_lo = $size->copy->bsub($size_hi)->numify;
+    $size_hi = $size_hi->brsft(32)->numify;
+
+    $s->send ("NBDMAGIC\x00\x00\x42\x02\x81\x86\x12\x53");
+    $s->send (pack "NN", $size_hi, $size_lo);
+    $s->send ("\x00" x 128);
+
+    # now serve
+    my $server = new ServerClass socket => $s;
+    $server->run;
+
+
+=head1 BUGS
+
+Should support AnyEvent or something similar for non-blocking behaviour.
+
 =head1 AUTHOR
 
- Marc Lehmann <pcg@goof.com>
+ Marc Lehmann <schmorp@schmorp.de>
  http://home.schmorp.de/
 
 =cut
