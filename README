@@ -1,0 +1,79 @@
+NAME
+    Linux::NBD::Client - client (device) side of a network block device
+
+SYNOPSIS
+     use Linux::NBD::Client;
+
+DESCRIPTION
+    WARNING: I talked to the author of the nbd driver because nbd is so
+    extremely racy (right now, stopping it often causes oopses, a server
+    crashing also often oopses etc..).
+
+    It turned out that he doesn't care at all and nbd is basically
+    unmaintained, so YMMV when using this module, especially when writing
+    servers.
+
+    He really should have said that on his nbd pages ;[.
+
+    OTOH, it works relatively reliable when you don't stop the servers, so
+    watch out and keep your fingers crossed.
+
+METHODS
+    $client = new Linux::NBD::Client [socket => $fh][, device =>
+    "/dev/ndx"], ...
+        Create a new client.
+
+        Unless "device" is given, an unused device node is looked up using
+        the "device" method (this might result in an exception!).
+
+        The other arguments correspond to calls to methods of the same name.
+
+    $client->socket([$tcp_socket])
+        Returns the current socket after setting a new one (if an argument
+        is supplied). The socket *MUST* be a tcp socket. Believe, bad things
+        will happen.
+
+        The special argument "undef" will try to clear the socket, if any
+        was set.
+
+    $client->device([$new_device])
+        Returns the current device node (e.g. "/dev/nd2") after setting a
+        new one if an argument is supplied.
+
+        If the argument is "undef" it will search for an unallocated
+        nbd-device and use it.
+
+    $client->disconnect
+        Tries to exit the server by ending a special disconnect message.
+
+    $client->clear_queue
+        Clears the request queue, if possible. Should be used before setting
+        a new socket.
+
+    $client->set_blocksize($blksize)
+        Set the device blocksize in bytes (must be >512, <PAGESIZE and a
+        power of two).
+
+    $client->set_size($bytes)
+        Set the device size in bytes.
+
+    $client->set_blocks($nblocks)
+        Set the size in blocks.
+
+    $client->run
+        Enters the service loop (waits for read/write requests on the device
+        and forwards them over the given socket). Only returns when somebody
+        calls "disconnect" or the server is killed.
+
+    $pid = $client->run_async
+        Runs the service loop asynchronously and returns the pid of the
+        newly created service process.
+
+    $client->kill_async
+        Kills any running async service. Please note that this also kills
+        the socket, so you need to re-set the socket after this call.
+
+AUTHOR
+     Marc Lehmann <schmorp@schmorp.de>
+     http://home.schmorp.de/
+
