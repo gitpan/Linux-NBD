@@ -20,49 +20,54 @@ DESCRIPTION
 
 METHODS
     $client = new Linux::NBD::Client [socket => $fh][, device =>
-    "/dev/ndx"], ...
+    "/dev/nbdX"], ...
         Create a new client.
 
         Unless "device" is given, an unused device node is looked up using
         the "device" method (this might result in an exception!).
 
-        The other arguments correspond to calls to methods of the same name.
-
-    $client->socket([$tcp_socket])
+    $client->socket ([$tcp_socket])
         Returns the current socket after setting a new one (if an argument
-        is supplied). The socket *MUST* be a tcp socket. Believe, bad things
-        will happen.
+        is supplied). The socket *MUST* be a tcp socket. Believe me, bad
+        things will happen if not.
 
         The special argument "undef" will try to clear the socket, if any
         was set.
 
-    $client->device([$new_device])
-        Returns the current device node (e.g. "/dev/nd2") after setting a
+    $client->device ([$new_device])
+        Returns the current device node (e.g. "/dev/nbd2") after setting a
         new one if an argument is supplied.
 
         If the argument is "undef" it will search for an unallocated
         nbd-device and use it.
 
     $client->disconnect
-        Tries to exit the server by ending a special disconnect message.
+        Tries to exit the server by sending a special disconnect message.
 
     $client->clear_queue
         Clears the request queue, if possible. Should be used before setting
         a new socket.
 
-    $client->set_blocksize($blksize)
-        Set the device blocksize in bytes (must be >512, <PAGESIZE and a
-        power of two).
+    $client->set_timeout ($timeout)
+        Set the request timeout, in seconds.
 
-    $client->set_size($bytes)
-        Set the device size in bytes.
+    $client->set_blocksize ($blksize)
+        Set the device block size in bytes, i.e. how big each block is (must
+        be >512, <PAGESIZE and a power of two).
 
-    $client->set_blocks($nblocks)
-        Set the size in blocks.
+        Also rounds down the device size to be a multiple of the block size.
+
+    $client->set_blocks ($nblocks)
+        Set the device size in block units.
+
+    $client->set_size ($bytes)
+        Set the device size in octet units, will be rounded down to be a
+        multiple of the block size.
 
     $client->run
-        Enters the service loop (waits for read/write requests on the device
-        and forwards them over the given socket). Only returns when somebody
+        Closes all file descriptors except the server socket and enters the
+        service loop (waits for read/write requests on the device and
+        forwards them over the given socket). Only returns when somebody
         calls "disconnect" or the server is killed.
 
     $pid = $client->run_async
@@ -76,4 +81,11 @@ METHODS
 AUTHOR
      Marc Lehmann <schmorp@schmorp.de>
      http://home.schmorp.de/
+
+POD ERRORS
+    Hey! The above document had some coding errors, which are explained
+    below:
+
+    Around line 258:
+        =cut found outside a pod block. Skipping to next block.
 
